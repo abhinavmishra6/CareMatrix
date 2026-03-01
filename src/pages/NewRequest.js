@@ -28,7 +28,7 @@ export default function NewRequest() {
 
   const [submitted, setSubmitted] = useState(false);
   const [requestCode, setRequestCode] = useState('');
-  const [sequence, setSequence] = useState(1);
+
 
   const resetForm = () => {
     setFormData({

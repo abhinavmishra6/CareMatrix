@@ -71,10 +71,12 @@ const handleLogin = async (e) => {
 };
 
   // 🔥 FETCH QUEUE
-  useEffect(() => {
-    if (staffUser) fetchQueue();
-  }, [staffUser]);
-
+useEffect(() => {
+  if (staffUser) {
+    fetchQueue();
+  }
+// eslint-disable-next-line react-hooks/exhaustive-deps
+}, [staffUser]);
   const fetchQueue = async () => {
     const q = query(
       collection(db, "requests"),
