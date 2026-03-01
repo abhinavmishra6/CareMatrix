@@ -1,8 +1,8 @@
 import React from 'react';
 import { NavLink, Link } from 'react-router-dom';
-import { Activity, Home, PlusSquare, Search, Shield } from 'lucide-react';
+import { Activity, Home, LucideLogIn, PlusSquare, Search, LogOut, User } from 'lucide-react';
 
-export default function Header() {
+export default function Header({ staffUser, onLogout }) {
   return (
     <header className="header">
       <Link to="/" className="header-logo">
@@ -26,9 +26,35 @@ export default function Header() {
       </nav>
 
       <div className="header-actions">
-        <Link to="/staff" className="btn-outline">
-          <Shield size={18} /> Staff Login
-        </Link>
+        {staffUser ? (
+          <div className="logged-in-info" style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+            <span className="staff-display" style={{ fontWeight: '700', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '5px', color: '#1e293b' }}>
+              <User size={18} /> {staffUser.name}
+            </span>
+            <button 
+              onClick={onLogout} 
+              className="btn-signout"
+              style={{
+                background: '#fee2e2',
+                color: '#ef4444',
+                border: '1px solid #fecdd3',
+                padding: '6px 12px',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                fontWeight: '600'
+              }}
+            >
+              <LogOut size={16} /> Sign Out
+            </button>
+          </div>
+        ) : (
+          <Link to="/staff" className="btn-outline" style={{textDecoration:'none', color:'black', display: 'flex', alignItems: 'center', gap: '8px'}}>
+            <LucideLogIn size={18} /> Staff Login
+          </Link>
+        )}
       </div>
     </header>
   );

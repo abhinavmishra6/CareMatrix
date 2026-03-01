@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+
 import {
   Shield,
   LogIn,
@@ -7,8 +8,11 @@ import {
   AlertCircle,
   Eye,
   LayoutDashboard,
-  History,
+  History
 } from "lucide-react";
+
+import { signInWithEmailAndPassword } from "firebase/auth";
+import { auth } from "../firebase";
 
 import {
   collection,
@@ -17,114 +21,140 @@ import {
   getDocs,
   updateDoc,
   doc,
+  getDoc
 } from "firebase/firestore";
 
 import { db } from "../firebase";
 
-export default function Staff() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [credentials, setCredentials] = useState({ userId: "", password: "" });
+export default function Staff({ staffUser, setStaffUser }) {
+
+  const [credentials, setCredentials] = useState({ userId: '', password: '' });
   const [requests, setRequests] = useState([]);
   const [showDetailsId, setShowDetailsId] = useState(null);
+  const [errorMessage, setErrorMessage] = useState('');
 
-  const staffList = [
-    { name: "Super Admin", id: "ADMIN001", pass: "Admin@123" },
-    { name: "Dr. Rajesh", id: "DOCS001", pass: "Docs@123" },
-    { name: "Lab Technician", id: "LABS001", pass: "Labs@123" },
-  ];
 
   // 🔐 LOGIN
-  const handleLogin = (e) => {
-    e.preventDefault();
-    const user = staffList.find(
-      (s) =>
-        s.id === credentials.userId && s.pass === credentials.password
+const handleLogin = async (e) => {
+  e.preventDefault();
+  setErrorMessage('');
+
+  try {
+    // 🔐 Sign in using Firebase Auth
+    const userCredential = await signInWithEmailAndPassword(
+      auth,
+      credentials.userId,    // now email
+      credentials.password
     );
 
-    if (user) {
-      setIsLoggedIn(true);
+    const user = userCredential.user;
+
+    // 🔥 Fetch department data from Firestore
+    const staffDoc = await getDoc(doc(db, "staff", user.email));
+
+    if (staffDoc.exists()) {
+      const data = staffDoc.data();
+
+      setStaffUser({
+        name: data.name,
+        id: user.email,
+        dept: data.role
+      });
+
     } else {
-      alert("Invalid Credentials");
+      setErrorMessage("No department assigned to this user.");
     }
-  };
+
+  } catch (error) {
+    setErrorMessage("Invalid email or password");
+  }
+};
 
   // 🔥 FETCH QUEUE
   useEffect(() => {
-    if (isLoggedIn) {
-      fetchQueue();
-    }
-  }, [isLoggedIn]);
+    if (staffUser) fetchQueue();
+  }, [staffUser]);
 
   const fetchQueue = async () => {
     const q = query(
       collection(db, "requests"),
-      where("currentDepartment", "==", "DOCS")
+      where("currentDepartment", "==", staffUser.dept)
     );
 
     const snapshot = await getDocs(q);
 
-    const data = snapshot.docs.map((doc) => ({
+    const data = snapshot.docs.map(doc => ({
       id: doc.id,
-      ...doc.data(),
+      ...doc.data()
     }));
 
     setRequests(data);
   };
 
-  // ✅ APPROVE
+  // ✅ ACTIONS
   const handleApprove = async (id) => {
     await updateDoc(doc(db, "requests", id), {
       status: "APPROVED",
-      currentDepartment: "PHAR",
+      currentDepartment: "PHAR"
     });
-
     fetchQueue();
   };
 
-  // ⏳ HOLD
   const handleHold = async (id) => {
     await updateDoc(doc(db, "requests", id), {
-      status: "ON HOLD",
+      status: "ON HOLD"
     });
-
     fetchQueue();
   };
 
-  // ❌ REJECT
   const handleReject = async (id) => {
     await updateDoc(doc(db, "requests", id), {
-      status: "REJECTED",
+      status: "REJECTED"
     });
-
     fetchQueue();
   };
 
   // ================= LOGIN PAGE =================
-  if (!isLoggedIn) {
+  if (!staffUser) {
     return (
       <div className="login-wrapper">
-        <h1>Staff Login</h1>
-        <form onSubmit={handleLogin}>
-          <input
-            type="text"
-            placeholder="User ID"
-            value={credentials.userId}
-            onChange={(e) =>
-              setCredentials({ ...credentials, userId: e.target.value })
-            }
-          />
-          <input
-            type="password"
-            placeholder="Password"
-            value={credentials.password}
-            onChange={(e) =>
-              setCredentials({ ...credentials, password: e.target.value })
-            }
-          />
-          <button type="submit">
-            Sign In <LogIn size={16} />
-          </button>
-        </form>
+        <div className="login-header">
+          <div className="shield-icon"><Shield size={32} /></div>
+          <h1 className="serif-font">Staff Login</h1>
+          <p>Each department staff can log in and process their step</p>
+        </div>
+
+        <div className="login-card-container">
+          <form className="auth-form" onSubmit={handleLogin}>
+            <div className="input-group">
+              <label>Email</label>
+              <input
+                type="text"
+                value={credentials.userId}
+                onChange={(e) =>
+                  setCredentials({ ...credentials, userId: e.target.value })
+                }
+              />
+            </div>
+
+            <div className="input-group">
+              <label>PASSWORD</label>
+              <input
+                type="password"
+                value={credentials.password}
+                onChange={(e) =>
+                  setCredentials({ ...credentials, password: e.target.value })
+                }
+              />
+            </div>
+
+            {errorMessage && <div className="error-box">{errorMessage}</div>}
+
+            <button type="submit" className="btn-primary" style={{ width: '100%' }}>
+              Sign In <LogIn size={18} />
+            </button>
+          </form>
+        </div>
       </div>
     );
   }
@@ -132,73 +162,100 @@ export default function Staff() {
   // ================= DASHBOARD =================
   return (
     <div className="dashboard-wrapper">
-      <h2>
-        <LayoutDashboard size={20} /> Doctor Queue (DOCS)
-      </h2>
 
-      {requests.length === 0 && <p>No pending requests</p>}
-
-      {requests.map((req) => (
-        <div key={req.id} className="request-card">
-          <div className="card-header">
-            <strong>{req.requestCode}</strong>
+      <div className="doctor-banner">
+        <div className="banner-profile">
+          <div className="stethoscope-icon">🩺</div>
+          <div className="profile-text">
+            <h2 className="serif-font">Department Dashboard</h2>
             <p>
-              {req.fullName} · {req.phone}
+              Logged in as <strong>{staffUser.name}</strong> · {staffUser.id}
             </p>
-            <p>Workflow: {req.workflowType}</p>
-            <p>Status: {req.status}</p>
           </div>
-
-          <div className="action-row">
-            <button
-              className="btn-approve"
-              onClick={() => handleApprove(req.id)}
-            >
-              <CheckCircle2 size={16} /> Approve
-            </button>
-
-            <button
-              className="btn-hold"
-              onClick={() => handleHold(req.id)}
-            >
-              <Clock size={16} /> Hold
-            </button>
-
-            <button
-              className="btn-reject"
-              onClick={() => handleReject(req.id)}
-            >
-              <AlertCircle size={16} /> Reject
-            </button>
-
-            <button
-              className="btn-details"
-              onClick={() =>
-                setShowDetailsId(
-                  showDetailsId === req.id ? null : req.id
-                )
-              }
-            >
-              <Eye size={16} /> Details
-            </button>
-          </div>
-
-          {showDetailsId === req.id && (
-            <div className="details-drawer">
-              <p><strong>Description:</strong> {req.description}</p>
-              <p><strong>Priority:</strong> {req.priority}</p>
-            </div>
-          )}
         </div>
-      ))}
 
-      {/* History Section Placeholder */}
-      <div style={{ marginTop: "40px" }}>
-        <h3>
-          <History size={18} /> Previously Processed
-        </h3>
-        <p>(You can implement history filter later)</p>
+        <div className="banner-stats">
+          <div className="stat-box">
+            <span className="val">{requests.length}</span>
+            <span className="lab">PENDING</span>
+          </div>
+        </div>
       </div>
+
+      <div className="section-block">
+        <h3 className="section-title">
+          <LayoutDashboard size={20} /> My Department Queue
+        </h3>
+
+        {requests.length === 0 && <p>No pending requests</p>}
+
+        {requests.map((req) => (
+          <div key={req.id} className="request-card">
+
+            <div className="card-header">
+              <div className="req-meta">
+                <span className="req-id">{req.requestCode}</span>
+                <span className="req-patient">
+                  {req.fullName} · {req.phone}
+                </span>
+                <span className="req-type">{req.workflowType}</span>
+              </div>
+
+              <div className="status-badges">
+                <span className="badge-blue">{req.status}</span>
+                <span className="badge-teal">{req.priority}</span>
+              </div>
+            </div>
+
+            <div className="msg-box">
+              {req.description}
+            </div>
+
+            <div className="action-row">
+              <div className="action-btns">
+                <button onClick={() => handleApprove(req.id)} className="btn-approve">
+                  <CheckCircle2 size={16} /> Approve
+                </button>
+
+                <button onClick={() => handleHold(req.id)} className="btn-hold">
+                  <Clock size={16} /> Hold
+                </button>
+
+                <button onClick={() => handleReject(req.id)} className="btn-reject">
+                  <AlertCircle size={16} /> Reject
+                </button>
+              </div>
+
+              <button
+                className="btn-details"
+                onClick={() =>
+                  setShowDetailsId(
+                    showDetailsId === req.id ? null : req.id
+                  )
+                }
+              >
+                <Eye size={16} /> Details
+              </button>
+            </div>
+
+            {showDetailsId === req.id && (
+              <div className="details-drawer">
+                <div><strong>Created:</strong> {req.createdAt?.toDate?.().toLocaleString()}</div>
+                <div><strong>Department:</strong> {req.currentDepartment}</div>
+              </div>
+            )}
+
+          </div>
+        ))}
+      </div>
+
+      <div className="section-block">
+        <h3 className="section-title">
+          <History size={20} /> Previously Processed
+        </h3>
+        <p>(Next we can filter status !== CREATED)</p>
+      </div>
+
     </div>
   );
 }
