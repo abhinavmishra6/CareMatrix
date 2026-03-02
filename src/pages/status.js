@@ -1,68 +1,69 @@
 import React, { useState } from 'react';
-import { Search, FileText } from 'lucide-react';
-
-import {
-  collection,
-  query,
-  where,
-  getDocs
-} from "firebase/firestore";
-
+import { Search, FileText, AlertCircle } from 'lucide-react';
+import { collection, query, where, getDocs } from "firebase/firestore";
 import { db } from "../firebase";
 
 export default function Status() {
-
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [code, setCode] = useState('');
   const [results, setResults] = useState([]);
   const [searched, setSearched] = useState(false);
+  const [error, setError] = useState('');
 
   const handleSearch = async () => {
-
-    // 🔒 Require ALL fields
+ 
+    setError('');
+    setSearched(false);
+    setResults([]);
     if (!name || !phone || !code) {
-      alert("Please enter Patient Name, Phone and Request Code");
+      setError("Please enter Patient Name, Phone and Request Code");
       return;
     }
 
-    const q = query(
-      collection(db, "requests"),
-      where("fullName", "==", name),
-      where("phone", "==", phone),
-      where("requestCode", "==", code.toUpperCase())
-    );
+    try {
+      const q = query(
+        collection(db, "requests"),
+        where("fullName", "==", name),
+        where("phone", "==", phone),
+        where("requestCode", "==", code.toUpperCase())
+      );
 
-    const snapshot = await getDocs(q);
+      const snapshot = await getDocs(q);
+      const data = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
 
-    const data = snapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data()
-    }));
+      setResults(data);
+      setSearched(true);
+    } catch (err) {
+      setError("Database connection error. Please try again later.");
+      console.error(err);
+    }
+  };
 
-    setResults(data);
-    setSearched(true);
+  const handleInputChange = (setter, value) => {
+    setter(value);
+    if (error) setError('');
   };
 
   return (
-    <div>
+    <div className="status-container">
       <div className="page-header">
         <h1>Track Your Request</h1>
         <p>Search by name, phone, or request code</p>
       </div>
 
       <div className="form-card" style={{ padding: '24px' }}>
-        <div
-          className="input-grid"
-          style={{ gridTemplateColumns: '1fr 1fr 1fr', alignItems: 'end' }}
-        >
+        <div className="input-grid" style={{ gridTemplateColumns: '1fr 1fr 1fr', alignItems: 'end', gap: '15px' }}>
           <div className="input-group">
             <label>Patient Name</label>
             <input
               type="text"
               placeholder="e.g. Arjun"
               value={name}
-              onChange={(e) => setName(e.target.value)}
+              onChange={(e) => handleInputChange(setName, e.target.value)}
             />
           </div>
 
@@ -72,7 +73,7 @@ export default function Status() {
               type="text"
               placeholder="10-digit"
               value={phone}
-              onChange={(e) => setPhone(e.target.value)}
+              onChange={(e) => handleInputChange(setPhone, e.target.value)}
             />
           </div>
 
@@ -82,27 +83,36 @@ export default function Status() {
               type="text"
               placeholder="REQ25030101"
               value={code}
-              onChange={(e) => setCode(e.target.value)}
+              onChange={(e) => handleInputChange(setCode, e.target.value)}
             />
           </div>
         </div>
 
+        {error && (
+          <div className="error-box" style={{ marginTop: '20px', marginBottom: '0px' }}>
+             <AlertCircle size={16} style={{ verticalAlign: 'middle', marginRight: '8px' }} />
+             {error}
+          </div>
+        )}
+
         <button
           className="btn-primary"
-          style={{ marginTop: '16px', width: '550px' }}
+          style={{ marginTop: '20px', width: '100%', maxWidth: '550px' }}
           onClick={handleSearch}
         >
           <Search size={18} /> Search
         </button>
       </div>
+      <br />
 
-      {!searched && (
+      {!searched && !error && (
         <div className="status-empty">
           <FileText size={48} color="#cbd5e1" style={{ margin: '0 auto 16px' }} />
           <h3>Find Your Request</h3>
           <p>Use all fields above to look up your healthcare request</p>
         </div>
       )}
+
 
       {searched && results.length === 0 && (
         <div className="status-empty">
@@ -112,35 +122,104 @@ export default function Status() {
         </div>
       )}
 
-      {results.map((req) => (
-        <div key={req.id} className="request-card" style={{ marginTop: '20px' }}>
-          <div className="card-header">
-            <div className="req-meta">
-              <span className="req-id">{req.requestCode}</span>
-              <span className="req-patient">
-                {req.fullName} · {req.phone}
-              </span>
-              <span className="req-type">{req.workflowType}</span>
-            </div>
 
-<div className="status-badges">
-  <span className="badge-blue">
-    {req.status.charAt(0) + req.status.slice(1).toLowerCase()}:
-    {" "}
-    {req.priority.charAt(0) + req.priority.slice(1).toLowerCase()}
-  </span>
-</div>
+{results.map((req) => {
+
+  // 🎨 Dynamic Priority Color
+  const priorityColor =
+    req.priority === "URGENT"
+      ? "#dc2626"   // red
+      : req.priority === "NORMAL"
+      ? "#f59e0b"   // orange
+      : "#16a34a";  // green (LOW)
+
+  return (
+    <div key={req.id} className="request-card" style={{ marginTop: '20px' }}>
+
+      {/* HEADER */}
+      <div
+        className="card-header"
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center"
+        }}
+      >
+
+        {/* LEFT SIDE */}
+        <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+
+          {/* RequestID | Name · Phone */}
+          <div style={{ fontSize: "15px", fontWeight: "600" }}>
+            <span style={{ color: "#2563eb" }}>
+              {req.requestCode}
+            </span>
+            {" | "}
+            <span style={{ color: "#0f172a" }}>
+              {req.fullName}
+            </span>
+            {" · "}
+            <span style={{ color: "#0f172a", fontWeight: "500" }}>
+              {req.phone}
+            </span>
           </div>
 
-<div className="msg-box" style={{ marginTop: "12px" }}>
-  {req.description}
-</div>
-
-          <div style={{ marginTop: '10px', fontSize: '14px', color: '#64748b' }}>
-            Current Department: <strong>{req.currentDepartment}</strong>
+          {/* Workflow Type */}
+          <div style={{ fontSize: "13px", color: "#3c4652" }}>
+            {req.workflowType}
           </div>
         </div>
-      ))}
+
+        {/* PRIORITY BADGE */}
+        <div
+          style={{
+            fontSize: "12px",
+            fontWeight: "600",
+            padding: "6px 14px",
+            borderRadius: "20px",
+            background: priorityColor,
+            color: "#ffffff"
+          }}
+        >
+          PRIORITY | {req.priority}
+        </div>
+      </div>
+
+      {/* DESCRIPTION */}
+      <div
+        className="msg-box"
+        style={{
+          marginTop: "18px",
+          padding: "14px",
+          background: "#f1f5f9",
+          borderRadius: "8px",
+          fontSize: "14px",
+          lineHeight: "1.6",
+          color: "#334155"
+        }}
+      >
+        {req.description}
+      </div>
+
+      {/* CURRENT DEPARTMENT */}
+      <div
+        style={{
+          display: "inline-block",
+          marginTop: "16px",
+          fontSize: "12px",
+          fontWeight: "600",
+          background: "#9333ea",
+          color: "#ffffff",
+          padding: "6px 14px",
+          borderRadius: "20px"
+        }}
+      >
+        Department: {req.currentDepartment}
+      </div>
+
+    </div>
+  );
+})}
     </div>
   );
 }

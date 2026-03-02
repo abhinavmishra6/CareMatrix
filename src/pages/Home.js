@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Search, PlusSquare, Shield } from 'lucide-react';
+import { Search, PlusSquare, Shield } from "lucide-react";
 import {
   UserPlus,
   FlaskConical,
@@ -14,29 +14,39 @@ import { collection, getDocs } from "firebase/firestore";
 import { db } from "../firebase";
 
 export default function HomePage() {
-
   const [totalRequests, setTotalRequests] = useState(0);
   const [pendingRequests, setPendingRequests] = useState(0);
   const [processedRequests, setProcessedRequests] = useState(0);
+  const [inProgressRequests, setInProgressRequests] = useState(0);
 
   useEffect(() => {
     fetchStats();
   }, []);
 
   const fetchStats = async () => {
+  try {
     const snapshot = await getDocs(collection(db, "requests"));
     const all = snapshot.docs.map(doc => doc.data());
 
     setTotalRequests(all.length);
+const pending = all.filter(r => r.status === "CREATED").length;
 
-    const pending = all.filter(r => r.status === "CREATED").length;
-    const processed = all.filter(
-      r => r.status === "APPROVED" || r.status === "REJECTED"
-    ).length;
+const inProcess = all.filter(
+  r => r.status === "IN PROGRESS" || r.status === "APPROVED"
+).length;
+
+const processed = all.filter(
+  r => r.status === "REJECTED" || r.status === "COMPLETED"
+).length;
 
     setPendingRequests(pending);
+    setInProgressRequests(inProcess);
     setProcessedRequests(processed);
-  };
+
+  } catch (error) {
+    console.error("Error fetching stats:", error);
+  }
+};
 
   const workflows = [
     {
@@ -62,7 +72,7 @@ export default function HomePage() {
     {
       title: "Patient Discharge",
       icon: <FileCheck size={18} />,
-      tags: ["DOCS", "LABS", "PHAR", "BILL", "ACCS"],
+      tags: ["DOCS", "LABS", "PHAR", "BILL", "ACCS", "DISC"],
     },
     {
       title: "Medical Records Verification",
@@ -77,46 +87,77 @@ export default function HomePage() {
   ];
 
   const departments = [
-    "DOCTOR","NURSING","LABORATORY","RADIOLOGY","PHARMACY","BILLING",
-    "INSURANCE DESK","MEDICAL RECORDS","RECEPTION","DISCHARGE MANAGEMENT","ACCOUNTS","ADMINSTRATION"
+    "DOCTOR",
+    "NURSING",
+    "LABORATORY",
+    "RADIOLOGY",
+    "PHARMACY",
+    "BILLING",
+    "INSURANCE DESK",
+    "MEDICAL RECORDS",
+    "RECEPTION",
+    "DISCHARGE MANAGEMENT",
+    "ACCOUNTS",
+    "ADMINISTRATION",
   ];
 
   return (
     <div className="main-content">
-
       {/* HERO */}
       <div className="home-hero">
+        {/* LEFT SIDE */}
         <div className="home-hero-text">
-          <span className="badge-pill">HOSPITAL INTER DEPARTMENT WORKFLOW SYSTEM</span>
+          <span className="badge-pill">
+            HOSPITAL INTER DEPARTMENT WORKFLOW SYSTEM
+          </span>
 
           <h1 className="hero-title serif-font">
-            Smarter <span>Patient</span><br/>Care Management
+            Smarter <span>Patient</span>
+            <br />
+            Care Management
           </h1>
 
           <p>
-            Submit requests, let each department process their step,
-            and track progress in real time.
+            Submit requests, let each department process their step, and track
+            progress in real time.
           </p>
 
           <div className="hero-buttons">
-            <a href="/new-request" className="btn-primary" style={{ textDecoration: 'none' }}>
-              <PlusSquare size={18} />New Request
+            <a href="/new-request" className="btn-primary">
+              <PlusSquare size={18} /> New Request
             </a>
-            <a href="/status" className="btn-primary" style={{ textDecoration: 'none' }}>
-              <Search size={18} />Track
+
+            <a href="/status" className="btn-primary">
+              <Search size={18} /> Track
             </a>
-            <a href="/staff" className="btn-primary" style={{ textDecoration: 'none' }}>
-              <Shield size={18} />Staff Login
+
+            <a href="/staff" className="btn-primary">
+              <Shield size={18} /> Staff Login
             </a>
           </div>
+        </div>
 
-          {/* 🔥 ONLY ADDED THIS SMALL STATS BLOCK */}
-          <div style={{ marginTop: "20px" }}>
-            <p>Total Requests: <strong>{totalRequests}</strong></p>
-            <p>Pending: <strong>{pendingRequests}</strong></p>
-            <p>Processed: <strong>{processedRequests}</strong></p>
+        {/* RIGHT SIDE → ENHANCED STATS */}
+        <div className="hero-right">
+          <div className="stats-card">
+            <div className="stat-pill">
+              <span>Total</span>
+              <strong>{totalRequests}</strong>
+            </div>
+
+            <div className="stat-pill">
+              <span>Pending</span>
+              <strong>{pendingRequests}</strong>
+            </div>
+            <div className="stat-pill">
+              <span>In Process</span>
+              <strong>{inProgressRequests}</strong>
+            </div>
+            <div className="stat-pill">
+              <span>Processed</span>
+              <strong>{processedRequests}</strong>
+            </div>
           </div>
-
         </div>
       </div>
 
@@ -134,7 +175,9 @@ export default function HomePage() {
 
               <div className="workflow-tags">
                 {wf.tags.map((tag, idx) => (
-                  <span key={idx} className="workflow-tag">{tag}</span>
+                  <span key={idx} className="workflow-tag">
+                    {tag}
+                  </span>
                 ))}
               </div>
             </div>
@@ -148,11 +191,12 @@ export default function HomePage() {
 
         <div className="dept-grid">
           {departments.map((d, i) => (
-            <div key={i} className="dept-card">{d}</div>
+            <div key={i} className="dept-card">
+              {d}
+            </div>
           ))}
         </div>
       </div>
-
     </div>
   );
 }

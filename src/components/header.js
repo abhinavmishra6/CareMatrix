@@ -29,7 +29,7 @@ export default function Header({ staffUser, onLogout }) {
         {staffUser ? (
           <div className="logged-in-info" style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
             <span className="staff-display" style={{ fontWeight: '700', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '5px', color: '#1e293b' }}>
-              <User size={18} /> {staffUser.name}
+              <NavLink to="/staff" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}style={{ textDecoration: 'none', color: 'inherit' }}><User size={18} />{staffUser.name}</NavLink>
             </span>
             <button 
               onClick={onLogout} 

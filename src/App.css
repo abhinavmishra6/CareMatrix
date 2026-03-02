@@ -236,8 +236,8 @@ body {
 }
 
 .input-group label {
-  font-size: 11px;
-  font-weight: 800;
+  font-size: 14px;
+  font-weight: 700;
   color: #475569;
   margin-bottom: 8px;
   display: block;
@@ -384,6 +384,45 @@ body {
   margin-left: 4px;
   font-weight: 600;
 }
+/* Password Field Wrapper */
+.password-group {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.password-group input {
+  width: 100%;
+  padding-right: 45px !important; /* Space for the icon */
+}
+
+/* Eye Toggle Button */
+.password-toggle {
+  position: absolute;
+  right: 12px;
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #64748b;
+  transition: color 0.2s ease;
+  z-index: 10;
+}
+
+.password-toggle:hover {
+  color: #2563eb;
+}
+
+/* Remove default button focus ring since we have custom styles */
+.password-toggle:focus {
+  outline: none;
+}
+
 /* Style for the inline error message */
 .error-box {
   background-color: #fff1f2; /* Soft red background */
@@ -518,12 +557,18 @@ body {
 .req-patient {
   color: #64748b;
   font-size: 14px;
+  font-weight: bold;
 }
 
 .req-type {
-  color: #0f172a;
+  color:white;
+  padding:2px;
   font-weight: 500;
   font-size: 14px;
+  border: 1px solid blue;
+  background-color: blue;
+  height: 25px;
+  border-radius:5px;
 }
 
 /* Workflow Flow Visual */
@@ -806,6 +851,71 @@ body {
   border-color: #dbeafe;
 }
 
+.section-label {
+  position: absolute;
+  top: -10px;
+  left: 18px;
+  background: #ffffff;
+  padding: 0 8px;
+  font-size: 12px;
+  letter-spacing: 1px;
+  color: #6b7280;
+  font-weight: 600;
+}
+/* ===== ENHANCED STATS DESIGN ===== */
+
+.stats-card {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* individual pill */
+.stat-pill {
+  background: linear-gradient(180deg, #f8fafc, #eef2f7);
+  border: 1px solid #dbeafe;
+  border-radius: 14px;
+  padding: 14px 22px;
+  min-width: 200px;
+  text-align: center;
+  box-shadow: 0 6px 14px rgba(37, 99, 235, 0.08);
+  transition: 0.2s ease;
+}
+
+.stat-pill:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 18px rgba(37, 99, 235, 0.15);
+}
+
+.stat-pill span {
+  display: block;
+  font-size: 13px;
+  color: #64748b;
+  font-weight: 600;
+  letter-spacing: 0.4px;
+}
+
+.stat-pill strong {
+  display: block;
+  font-size: 26px;
+  color: #1e3a8a;
+  margin-top: 4px;
+  font-weight: 800;
+}
+/* remove underline from hero buttons */
+.hero-buttons a {
+  text-decoration: none !important;
+  color: white; /* keep text white */
+}
+
+/* remove visited & focus underline */
+.hero-buttons a:visited,
+.hero-buttons a:hover,
+.hero-buttons a:focus {
+  text-decoration: none !important;
+  color: white;
+}
+
 /* MOBILE RESPONSIVE */
 @media (max-width: 900px) {
   .home-hero {
@@ -821,4 +931,27 @@ body {
   .hero-buttons {
     justify-content: center;
   }
+}
+.status-badges{
+  margin:10px;
+}
+.badge-blue{
+  margin:5px;
+  padding:2px;
+  border-radius: 5px;
+  color:rgb(0, 0, 0);
+  border:1px solid blue;
+  font-weight: bold;
+  width:10%;
+  margin-left: 0px;
+}
+.badge-teal{
+  margin:5px;
+  padding:2px;
+  border-radius: 5px;
+  color:rgb(0, 0, 0);
+  border:1px solid blue;
+  font-weight: bold;
+  width: 10%;
+  
 }

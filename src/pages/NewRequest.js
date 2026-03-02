@@ -29,7 +29,6 @@ export default function NewRequest() {
   const [submitted, setSubmitted] = useState(false);
   const [requestCode, setRequestCode] = useState('');
 
-
   const resetForm = () => {
     setFormData({
       fullName: '',
@@ -54,7 +53,7 @@ export default function NewRequest() {
 
   try {
 
-    // 🔥 Get today's existing requests
+    //  Get today's existing requests
     const snapshot = await getDocs(collection(db, "requests"));
 
     const todayRequests = snapshot.docs.filter(doc =>
@@ -64,52 +63,54 @@ export default function NewRequest() {
     const nextSeq = String(todayRequests.length + 1).padStart(2, '0');
     const newCode = `${todayPrefix}${nextSeq}`;
 
-    // 🔥 Workflow mapping
+    //  Workflow mapping
     const workflowMap = {
-      "1": {
-        name: "Patient Registration & Consultation",
-        department: "RECP"
-      },
-      "2": {
-        name: "Laboratory Test Request",
-        department: "DOCS"
-      },
-      "3": {
-        name: "Pharmacy Medication",
-        department: "DOCS"
-      },
-      "4": {
-        name: "Insurance Claim Approval",
-        department: "BILL"
-      },
-      "5": {
-        name: "Patient Discharge",
-        department: "DOCS"
-      },
-      "6": {
-        name: "Emergency Escalation",
-        department: "NURS"
-      },
-      "7": {
-        name: "Medical Records Verification",
-        department: "RECP"
-      }
-    };
+  "1": {
+    name: "Patient Registration & Consultation",
+    steps: ["RECP", "NURS", "DOCS"]
+  },
+  "2": {
+    name: "Laboratory Test Request",
+    steps: ["DOCS", "LABS", "MEDR"]
+  },
+  "3": {
+    name: "Pharmacy Medication",
+    steps: ["DOCS", "PHAR", "BILL"]
+  },
+  "4": {
+    name: "Insurance Claim Approval",
+    steps: ["BILL", "INSR", "ACCS", "ADMIN"]
+  },
+  "5": {
+    name: "Patient Discharge",
+    steps: ["DOCS", "LABS", "PHAR", "BILL", "ACCS", "DISC"]
+  },
+  "6": {
+    name: "Emergency Escalation",
+    steps: ["NURS", "DOCS", "ADMIN"]
+  },
+  "7": {
+    name: "Medical Records Verification",
+    steps: ["RECP", "MEDR", "ADMIN"]
+  }
+};
 
     const selectedWorkflow = workflowMap[formData.workflowType];
 
     await addDoc(collection(db, "requests"), {
-      requestCode: newCode,
-      fullName: formData.fullName,
-      phone: formData.phone,
-      dob: formData.dob,
-      priority: formData.priority,
-      workflowType: selectedWorkflow.name, // ✅ Store name
-      status: "CREATED",
-      currentDepartment: selectedWorkflow.department, // ✅ Auto assign
-      description: formData.description,
-      createdAt: serverTimestamp()
-    });
+  requestCode: newCode,
+  fullName: formData.fullName,
+  phone: formData.phone,
+  dob: formData.dob,
+  priority: formData.priority,
+  workflowType: selectedWorkflow.name,
+  workflowSteps: selectedWorkflow.steps,
+  currentStep: 0,
+  currentDepartment: selectedWorkflow.steps[0],
+  status: "CREATED",
+  description: formData.description,
+  createdAt: serverTimestamp()
+});
 
     setRequestCode(newCode);
     setSubmitted(true);
