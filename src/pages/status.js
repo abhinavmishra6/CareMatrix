@@ -232,16 +232,16 @@ export default function Status() {
                   style={{
                     position: "absolute",
                     top: "10px",
-                    left: "0",
-                    right: "0",
+                    left: "9px",
+                    right: "9px",
                     height: "4px",
-                    background: "#e5e7eb",
+                    background: "rgba(0,0,200,0.6)",
                     zIndex: 0,
                   }}
                 ></div>
 
                 {req.workflowSteps?.map((dept, index) => {
-                  let bg = "#d1d5db"; // default gray
+                  let bg = "#ff8080"; // default gray
                   let textColor = "#6b7280";
 
                   if (index < req.currentStep) {

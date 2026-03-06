@@ -62,7 +62,7 @@ const processed = all.filter(
     {
       title: "Pharmacy Medication",
       icon: <Pill size={18} />,
-      tags: ["DOCS", "PHAR", "BILL"],
+      tags: ["PHAR", "DOCS", "BILL"],
     },
     {
       title: "Insurance Claim Approval",

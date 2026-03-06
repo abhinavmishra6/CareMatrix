@@ -955,3 +955,54 @@ body {
   width: 10%;
   
 }
+/* STATUS COLORS */
+
+.badge-green {
+  background: #16a34a;
+  color: white;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-weight: 600;
+}
+
+.badge-red {
+  background: #dc2626;
+  color: white;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-weight: 600;
+}
+
+.badge-yellow {
+  background: #eab308;
+  color: white;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-weight: 600;
+}
+
+/* PRIORITY COLORS */
+
+.priority-red {
+  background: #ef4444;
+  color: white;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-weight: 600;
+}
+
+.priority-yellow {
+  background: #f59e0b;
+  color: white;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-weight: 600;
+}
+
+.priority-green {
+  background: #22c55e;
+  color: white;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-weight: 600;
+}
